@@ -1,0 +1,18 @@
+[
+    {
+      "name": "google_search",
+      "description": "Opens a Google search in the browser using a query and returns visible text results.",
+      "path": "tools/google_search.py"
+    },    
+    {
+      "name": "spotify_skip",
+      "description": "Skips to the next song on Spotify using AppleScript on macOS.",
+      "path": "tools/spotify_skip.py"
+    },
+    {
+      "name": "read_pdf",
+      "description": "Reads a PDF file and extracts its text.",
+      "path": "tools/read_pdf.py"
+    }
+  ]
+  

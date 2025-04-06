@@ -8,13 +8,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 
+driver = None
+
 def start_browser():
     global driver
     if driver is None:
         options = uc.ChromeOptions()
         options.add_argument("--start-maximized")
         options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
         )
         driver = uc.Chrome(version_main=134, options=options)
@@ -35,3 +37,8 @@ def run_search(query):
 
     result_text = driver.find_element(By.TAG_NAME, "body").text
     return result_text
+
+if __name__ == '__main__':
+    query = "distance from oliv madison to computer science building google maps"
+    search_results = run_search(query)
+    print(search_results)

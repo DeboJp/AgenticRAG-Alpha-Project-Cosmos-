@@ -31,7 +31,7 @@ def index_tools(index_path="tools/index.json"):
 Given a task description, return the top-k matching tool names
 using vector similarity over tool descriptions.
 """
-def match_tools(task, top_k=2):
+def match_tools(task, top_k=3):
     task_embedding = embed_texts([task])[0]
     results = collection.query(query_embeddings=[task_embedding], n_results=top_k)
     # return results["distances"][0]

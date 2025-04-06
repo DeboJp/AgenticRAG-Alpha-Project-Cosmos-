@@ -4,3 +4,4 @@ chromadb
 python-dotenv
 accelerate
 selenium
+google-generativeai

@@ -3,16 +3,14 @@ import json
 
 """
 Loads the source code of the specified tools by reading their .py files based on names 
-listed in the tool index. Returns the combined code as a single string.
+listed in the tool index. Returns the path of the starting helper code.
 """
-def load_tool_code(tool_names, index_path="tools/index.json"):
+def get_tool_path(tool_name, index_path="tools/index.json"):
     with open(index_path, "r") as f:
         tools = json.load(f)
 
-    code_blocks = []
     for tool in tools:
-        if tool["name"] in tool_names:
-            with open(tool["path"], "r") as tf:
-                code_blocks.append(tf.read())
+        if tool["name"] == tool_name:
+            return tool["path"]
 
-    return "\n\n".join(code_blocks)
+    raise ValueError(f"No tool named '{tool_name}' found in {index_path}")

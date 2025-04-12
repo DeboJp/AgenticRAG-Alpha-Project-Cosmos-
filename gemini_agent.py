@@ -1,11 +1,11 @@
-# gemini_agent.py
+# gemini_agent.py - not in use.
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel(f"models/{os.getenv("MODEL_NAME")}")
+model = genai.GenerativeModel(f"models/{os.getenv('MODEL_NAME')}")
 
 """
 Uses Gemini to generate a runnable Python script based on a task and tool code.

@@ -2,7 +2,7 @@
     {
       "name": "google_search",
       "description": "Opens a Google search in the browser using a query and returns visible text results.",
-      "path": "tools/google_search.py"
+      "path": "browser_mode/agentic_loop.py"
     },    
     {
       "name": "spotify_skip",

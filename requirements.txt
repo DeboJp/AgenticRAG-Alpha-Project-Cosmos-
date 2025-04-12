@@ -1,7 +1,11 @@
-sentence-transformers
-transformers
+sentence-transformers==2.2.2
+transformers==4.30.2
+huggingface_hub==0.14.1
 chromadb
 python-dotenv
-accelerate
+accelerate==0.31.0
 selenium
+undetected-chromedriver
 google-generativeai
+beautifulsoup4
+playwright

@@ -1,35 +1,32 @@
-# main.py
-from task_router import index_tools, match_tools
-from tool_loader import load_tool_code
+from task_router import match_tools, index_tools
+from tool_loader import get_tool_path
 from gemini_agent import generate_script
-from runner import run_generated_script
+from runner import run_tool
+import time
+# from selenium import webdriver
+# import undetected_chromedriver as uc
 
+index_tools()  # index once at start
 
-# Step 1: Index the tools
-index_tools()
+print("🧠 ToolAgent is ready.")
 
-task = "search distance from oliv madison to computer science building on google maps. use maps.google.com"
-print(f"Task: {task}")
+while True:
+    task = input("\n📥 What do you want to do? (type 'exit' to quit): ")
+    if task.lower() == "exit":
+        break
 
-tool_names_matched = match_tools(task)
-print(f"Best Matching Tools: {tool_names_matched}")
-# print(tool_names_matched)
-# Load tool code
-tool_code = load_tool_code(tool_names_matched[0])
+    matched = match_tools(task)
+    if not matched:
+        print("❌ No matching tool found.")
+        continue
 
-# Generate final script
-script = generate_script(task, tool_code)
+    tool_name = matched[0]
+    print(f"🔧 Matched tool: {tool_name}")
 
-# Show generated result
-print("\n🧾 Generated Script:\n")
-print(script)
+    tool_code = get_tool_path(tool_name)
 
-driver = None
-stdout, stderr = run_generated_script(script)
+    print(f"\n▶️ Running tool {tool_code}\n")
 
-print("\n📤 Script Output:\n")
-print(stdout)
+    run_tool(tool_code)
 
-if stderr:
-    print("\n⚠️ Script Errors:\n")
-    print(stderr)
+#search distance from oliv madison to computer science building on google maps. use maps.google.com

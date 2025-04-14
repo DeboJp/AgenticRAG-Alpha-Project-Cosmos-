@@ -1,8 +1,8 @@
 # Cosmos — Local AgenticRAG Task Automation (v0.1-Alpha)
 
 <p align="center">
-  <img src="assets/demo1.gif" width="45%" />
-  <img src="assets/demo2.gif" width="45%" />
+  <img src="readme-assets/demo1.gif" width="45%" />
+  <img src="readme-assets/demo2.gif" width="45%" />
 </p>
 
 **Project Cosmos** is an experiment in building a fully autonomous local-first agent that can perform tasks like web browsing and desktop actions with traceable, deterministic steps — not hallucinated code dumps. It combines:

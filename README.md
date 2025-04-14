@@ -12,6 +12,8 @@
 
 > "task → plan → act → check → repeat"
 
+Please check out `v0.1_progress_log(guide).txt` for more dev specific details, if you'd just like to follow along.
+
 ## 🔎 What Can It Do?
 
 Currently supports basic web automation like:

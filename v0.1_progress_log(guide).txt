@@ -1,0 +1,144 @@
+(dev_notes)
+AgenticRAG Alpha — Browser Automation & Agentic Execution (v0.1 Recap)
+
+Staring: 
+The project started off as a simple agentic tool based RAG system, where llms 
+would entirely create workflow .py scripts based on tool templates. However, 
+that system had several flaws which led to the current implementation you can 
+see(which also has flaws less than before and maybe improved at a later date).
+
+Main Goal:
+We wanted to build a local-first system that allows an intelligent agent 
+(an LLM) to perform autonomous web and desktop tasks end-to-end — 
+deterministically, with visible changes and traceable plans. Inspired by 
+tools like ChatGPT Operator, the goal wasn’t to hallucinate entire flows, 
+but to guide the LLM as a planner and let a controller execute precise actions
+ step-by-step. The current phase of this is limited to **browser automation**,
+  but the architecture is designed to expand to local desktop tools and APIs 
+  later through RAGs(or that is the plan at least for now).
+
+Phase 1: Trialing w/ Selenium
+We started with Selenium (undetected_chromedriver) as the backend for the 
+browser controller. The early results were promising: for pages that expose
+ clear hrefs or input fields (like Google, Reddit), we could fully load, 
+ type, press enter, and scrape responses. The downside came with modern 
+ SPAs (YouTube, X/Twitter) — where navigation is virtual, links are 
+ shadow-wrapped, and clicking does not visibly change the DOM tree. Because
+  of this, our agent would often act blindly or fail to observe whether its
+   action did anything. Selenium also lacks robust native DOM introspection 
+   beyond XPath/CSS, and sometimes its internal DOM and the visible page were
+    out of sync.(e.g., find_element success, but nothing visible on screen).
+
+We also had occasional issues with Google and YouTube showing CAPTCHAs or 
+blocked content — even with user-agents and stealth options set. This blocked
+ progress, so we opted to switch to Playwright.
+
+Phase 2: Porting to Playwright
+Playwright allowed better DOM control and headless toggling. We created 
+`browser_controller.py` as our custom wrapper over the Playwright Python sync
+ API. Our DOM grabbing strategy was:
+
+- Scroll the page a few times (simulate user scroll).
+- Collect all visible `a`, `button`, `input`, `textarea`, headers, etc.
+- Filter to only those with innerText or `href`
+- Record them as a `clickables` list, each with tag, text, id, className, 
+href, bbox_top, etc.
+- Also stored title, url, input value, and truncated HTML
+
+From here, we passed just this compact state into Gemini (via `llm_planner.py`)
+ — who served as a "planner", not executor.
+
+Problems We Solved:
+- Selector guessing by the LLM → index-based interaction (`click(index)`).
+-  Repeating same action → Added memory (`action_history[-3:]`) and diff 
+check (`same_url`, `same_clickables`).
+-  DOM elements not changing → Tracked before/after click to detect failure.
+- LLM tries to click logos or ad banners → Filtered based on tag + length + bbox position.
+- Typing into buttons → Fallback to visible editable inputs, even if selector fails.
+- Only top-of-page content → Forced scroll + viewport increase to load more of the page.
+
+Structure:
+We used three core files inside `browser_mode/`:
+- `agentic_loop.py`: The brain. Repeatedly gets browser state, passes to LLM 
+planner, performs action, checks for changes.
+- `llm_planner.py`: Prompts Gemini with a minimal list of visible elements, 
+asking it to return only structured JSON (`{action: "click", index: 3}`).
+- `browser_controller.py`: Browser wrapper for `click_by_element`, `type`, 
+`press_enter`, `get_state`.
+
+We also maintained an older `browser_mode_Selenium/` folder with a working 
+version using `undetected_chromedriver`, but Playwright is our current default.
+
+Challenges:
+- CAPTCHA blocks on search engines and Google Maps (especially without cookies).
+- Gemini sometimes outputting bad JSON or multi-line markdown code blocks.
+- Playwright timeout on invisible elements (fixed by robust input handling).
+- Shadow DOM elements like on YouTube that wrap links in pseudo-containers 
+with no `href`.
+- LLM misunderstanding tasks due to limited visible DOM context.
+- Repetition and lack of backtracking — no retry queue yet.
+- Some DOM nodes had duplicated text, leading to multiple near-identical 
+clickables.
+
+Open questions:
+- Should we split planning and action into two different LLMs? 
+(One decides what to do, one decides *how* to do it/builds based on 
+out environment)
+- Should we assign weights to clickables (e.g. header > footer, 
+video-title > sidebar ad)? essentially ranking them.
+- Should we track `innerHTML` diffs to better detect state change?
+- Introduce backtracking or retry loops if state stays unchanged?
+- How do we simulate human behavior for pages that hide content until 
+interacted with?
+
+What it can do for now:
+This architecture already allows tasks like:
+- “Search dogs on Google”
+- “Click the first video on YouTube home”
+- “Scroll to video titled XYZ and click it”
+- “Go to images tab”
+- simple cases as such, etc.
+
+Known Limitations (Current State):The agent only reliably completes 
+basic search and interaction flows. For example:
+* Typing into Google and pressing enter? works
+* Clicking a visible tab or button on YouTube? works (sometimes)
+* Navigating to a video and verifying page change?  (fails often)
+* Interacting with nested or JS-only links? fails
+So while the control loop runs, it does not consistently succeed. 
+We don’t yet have guaranteed task completion beyond simple steps — 
+especially on modern JS-heavy sites.
+
+The agent currently only reliably completes basic web search tasks — 
+like typing into Google or clicking on clearly exposed links. On more 
+dynamic pages (like YouTube), even after scroll and deep DOM indexing, 
+the planner often picks elements that do not result in a meaningful page
+ change or action. For example, clicking a thumbnail might not navigate,
+  or typing into a search bar might fail silently if the selector is 
+  mismatched or hidden.
+So while the loop runs, it doesn't yet consistently succeed beyond 
+simple flows. Also, results only sometimes work — since we rely on an
+ LLM (Gemini) that isn’t grounded in full DOM semantics. It doesn’t 
+ always know if it succeeded. That’s why we’re careful to validate 
+ every step after the action, and why we emphasize deterministic 
+ observability in the loop, since working with an llm is still a 
+ very blackbox workflow.
+
+Some Simple Next Priorites Thoughts:
+* Robust query+click logic
+* Smarter DOM diffing (partial vs total match)
+* Perhaps Per-site tuning and retry logic w/ backtrakcinig
+* Rag based memory of known sites so it can query what worked previously
+* Of course  extend it to desktop-level agents (Spotify skip, file 
+system read/write, etc.) using the same `task → plan → act → check → 
+repeat` model. 
+
+We plan to continue development this summer — making this a complete, 
+multi-modal, cross-platform agent that can interact with browsers, apps, 
+files, and tools — all with a single natural language instruction.
+
+Everything is under `debojp-agenticrag-alpha-project-cosmos/` and ready
+ to modularize.
+
+Next?(cool things I want to add if its done) Add vision. Add memory. 
+Add multi-tool routing. Add voice-agent. But this was the good start. 
